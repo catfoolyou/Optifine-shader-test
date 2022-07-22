@@ -9,6 +9,6 @@ Planned functionality includes:
 - Block and fluid refelctions
 - QOL changes!
 
-# CUrent stage of the project
+# Current stage of the project
 
 ![Screenshot](https://user-images.githubusercontent.com/95507639/180534727-7426d584-94d9-4922-9d05-9616407e4979.png)
