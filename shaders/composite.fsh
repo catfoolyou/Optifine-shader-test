@@ -29,8 +29,8 @@ const int colortex2Format = RGB16;
 */
 
 const float sunPathRotation = -40.0f;
-const int shadowMapResolution = 800; // Shadowmap quality
-const int noiseTextureResolution = 64;
+const int shadowMapResolution = 512; // Shadowmap quality
+const int noiseTextureResolution = 32;
 
 const float Ambient = 0.025f; // Ambient light that comes from the sun
 
@@ -57,8 +57,8 @@ vec3 GetLightmapColor(in vec2 Lightmap){
     // First adjust the lightmap
     Lightmap = AdjustLightmap(Lightmap);
     // Color of the torch and sky. The sky color changes depending on time of day but I will ignore that for simplicity
-    const vec3 TorchColor = vec3(1.0f, 0.25f, 0.08f);
-    const vec3 SkyColor = vec3(0.05f, 0.15f, 0.3f);
+    const vec3 TorchColor = vec3(2.0f, 1.25f, 1.08f);
+    const vec3 SkyColor = vec3(0.15f, 0.25f, 0.4f);
     // Multiply each part of the light map with it's color
     vec3 TorchLighting = Lightmap.x * TorchColor;
     vec3 SkyLighting = Lightmap.y * SkyColor;
@@ -110,7 +110,7 @@ vec3 GetShadow(float depth) {
 
 void main(){
     // Account for gamma correction
-    vec3 Albedo = pow(texture2D(colortex0, TexCoords).rgb, vec3(2.0f)); // Making the vec3 less make it desaturated like BSL
+    vec3 Albedo = pow(texture2D(colortex0, TexCoords).rgb, vec3(2.2f)); // Making the vec3 less make it desaturated like BSL
     float Depth = texture2D(depthtex0, TexCoords).r;
     if(Depth == 1.0f){
         gl_FragData[0] = vec4(Albedo, 1.0f);
@@ -122,7 +122,7 @@ void main(){
     vec2 Lightmap = texture2D(colortex2, TexCoords).rg;
     vec3 LightmapColor = GetLightmapColor(Lightmap);
     // Compute cos theta between the normal and sun directions
-    float NdotL = max(dot(Normal, normalize(sunPosition)), 0.0f);
+    float NdotL = max(dot(Normal, normalize(sunPosition)), 1.5f); // Lightmap?
     // Do the lighting calculations
     vec3 Diffuse = Albedo * (LightmapColor + NdotL * GetShadow(Depth) + Ambient);
     /* DRAWBUFFERS:0 */
