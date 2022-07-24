@@ -11,4 +11,4 @@ Planned functionality includes:
 
 # Current stage of the project
 
-![screenshot](https://user-images.githubusercontent.com/95507639/180618123-003d9adf-32e2-44dd-a2fd-cb946585737c.png)
+![screenshot](./2022-07-24_13.54.05.png)
