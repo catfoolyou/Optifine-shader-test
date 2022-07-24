@@ -29,20 +29,17 @@ const int colortex2Format = RGB16;
 */
 
 const float sunPathRotation = -40.0f;
-const int shadowMapResolution = 512; // Shadowmap quality
+const int shadowMapResolution = 1024; // Shadowmap quality
 const int noiseTextureResolution = 32;
 
-const float Ambient = 0.025f; // Ambient light that comes from the sun
+const float Ambient = 0.1f; // Ambient light that comes from the sun
 
 float AdjustLightmapTorch(in float torch) {
-    const float K = 2.0f;
-    const float P = 5.06f;
-    return K * pow(torch, P);
+    return 2.0 * pow(torch, 5.06);
 }
 
 float AdjustLightmapSky(in float sky){
-    float sky_2 = sky * sky;
-    return sky_2 * sky_2;
+    return sky * sky * sky * sky;
 }
 
 vec2 AdjustLightmap(in vec2 Lightmap){
@@ -80,7 +77,7 @@ vec3 TransparentShadow(in vec3 SampleCoords){
     return mix(TransmittedColor * ShadowVisibility1, vec3(1.0f), ShadowVisibility0);
 }
 
-#define SHADOW_SAMPLES 2
+#define SHADOW_SAMPLES 2 // Higher gives better quality, lower gives better performance
 const int ShadowSamplesPerSize = 2 * SHADOW_SAMPLES + 1;
 const int TotalSamples = ShadowSamplesPerSize * ShadowSamplesPerSize;
 
