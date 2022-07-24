@@ -11,4 +11,4 @@ Planned functionality includes:
 
 # Current stage of the project
 
-![screenshot](./2022-07-24_13.54.05.png)
+![screenshot](./main.png)
