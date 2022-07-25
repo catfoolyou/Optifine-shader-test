@@ -16,6 +16,7 @@ uniform sampler2D shadowtex0;
 uniform sampler2D shadowtex1;
 uniform sampler2D shadowcolor0;
 uniform sampler2D noisetex;
+uniform sampler2D lightmap;
 
 uniform mat4 gbufferProjectionInverse;
 uniform mat4 gbufferModelViewInverse;
@@ -30,6 +31,7 @@ const int colortex2Format = RGB16;
 
 const float sunPathRotation = -40.0f;
 const int shadowMapResolution = 1024; // Shadowmap quality
+const float shadowDistance = 45;
 const int noiseTextureResolution = 32;
 
 const float Ambient = 0.1f; // Ambient light that comes from the sun

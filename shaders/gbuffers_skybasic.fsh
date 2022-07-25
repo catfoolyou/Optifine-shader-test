@@ -24,7 +24,7 @@ void main() {
 		color = starData.rgb;
 	}
 	else {
-		vec4 pos = vec4(gl_FragCoord.xy / vec2(viewWidth, viewHeight) * 2.0 - 1.0, 1.0, 1.0);
+		vec4 pos = vec4(gl_FragCoord.xy / vec2(viewWidth, viewHeight) * 1.0, 1.0, 1.0);
 		pos = gbufferProjectionInverse * pos;
 		color = calcSkyColor(normalize(pos.xyz));
 	}
