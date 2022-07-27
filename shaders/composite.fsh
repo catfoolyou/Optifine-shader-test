@@ -3,6 +3,7 @@
 #include "distort.glsl"
 
 varying vec2 TexCoords;
+varying vec2 lmcoord;
 
 // Direction of the sun (not normalized!)
 uniform vec3 sunPosition;
@@ -35,6 +36,8 @@ const float shadowDistance = 45;
 const int noiseTextureResolution = 32;
 
 const float Ambient = 0.1f; // Ambient light that comes from the sun
+//const float Ambient = lmcoord.y * sin(worldTime / 24000.0 * 3.14 * 2.0);
+
 
 float AdjustLightmapTorch(in float torch) {
     return 2.0 * pow(torch, 5.06);
@@ -57,7 +60,7 @@ vec3 GetLightmapColor(in vec2 Lightmap){
     Lightmap = AdjustLightmap(Lightmap);
     // Color of the torch and sky. The sky color changes depending on time of day but I will ignore that for simplicity
     const vec3 TorchColor = vec3(2.0f, 1.25f, 1.08f);
-    const vec3 SkyColor = vec3(0.15f, 0.25f, 0.4f);
+    const vec3 SkyColor = vec3(0.15f, 0.15f, 0.3f);
     // Multiply each part of the light map with it's color
     vec3 TorchLighting = Lightmap.x * TorchColor;
     vec3 SkyLighting = Lightmap.y * SkyColor;
