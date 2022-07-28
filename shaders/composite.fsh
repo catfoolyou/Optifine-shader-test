@@ -4,6 +4,7 @@
 
 varying vec2 TexCoords;
 varying vec2 lmcoord;
+varying vec4 texcoord;
 
 // Direction of the sun (not normalized!)
 uniform vec3 sunPosition;
@@ -12,6 +13,7 @@ uniform vec3 sunPosition;
 uniform sampler2D colortex0;
 uniform sampler2D colortex1;
 uniform sampler2D colortex2;
+uniform sampler2D colortex6;
 uniform sampler2D depthtex0;
 uniform sampler2D shadowtex0;
 uniform sampler2D shadowtex1;
@@ -23,6 +25,8 @@ uniform mat4 gbufferProjectionInverse;
 uniform mat4 gbufferModelViewInverse;
 uniform mat4 shadowModelView;
 uniform mat4 shadowProjection;
+
+uniform int worldTime;
 
 /*
 const int colortex0Format = RGBA16F;
@@ -126,7 +130,7 @@ void main(){
     // Compute cos theta between the normal and sun directions
     float NdotL = max(dot(Normal, normalize(sunPosition)), 1.5f); // Lightmap?
     // Do the lighting calculations
-    vec3 Diffuse = Albedo * (LightmapColor + NdotL * GetShadow(Depth) + Ambient);
+    vec3 Diffuse = Albedo * (LightmapColor + NdotL * GetShadow(Depth) + 0.1f);
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
     gl_FragData[0] = vec4(Diffuse, 1.0f);
