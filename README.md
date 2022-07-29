@@ -12,3 +12,7 @@ Planned functionality includes:
 # Current stage of the project
 
 ![screenshot](./main.png)
+
+# Lighting showcase
+
+![screenshot](./main.gif)

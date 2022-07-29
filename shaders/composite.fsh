@@ -40,21 +40,15 @@ const float shadowDistance = 45;
 const int noiseTextureResolution = 32;
 
 const float Ambient = 0.1f; // Ambient light that comes from the sun
-//const float Ambient = lmcoord.y * sin(worldTime / 24000.0 * 3.14 * 2.0);
-
 
 float AdjustLightmapTorch(in float torch) {
     return 2.0 * pow(torch, 5.06);
 }
 
-float AdjustLightmapSky(in float sky){
-    return sky * sky * sky * sky;
-}
-
 vec2 AdjustLightmap(in vec2 Lightmap){
     vec2 NewLightMap;
     NewLightMap.x = AdjustLightmapTorch(Lightmap.x);
-    NewLightMap.y = AdjustLightmapSky(Lightmap.y);
+    NewLightMap.y = Lightmap.y;
     return NewLightMap;
 }
 
@@ -64,7 +58,7 @@ vec3 GetLightmapColor(in vec2 Lightmap){
     Lightmap = AdjustLightmap(Lightmap);
     // Color of the torch and sky. The sky color changes depending on time of day but I will ignore that for simplicity
     const vec3 TorchColor = vec3(2.0f, 1.25f, 1.08f);
-    const vec3 SkyColor = vec3(0.15f, 0.15f, 0.3f);
+    const vec3 SkyColor = vec3(0.1f, 0.1f, 0.25f);
     // Multiply each part of the light map with it's color
     vec3 TorchLighting = Lightmap.x * TorchColor;
     vec3 SkyLighting = Lightmap.y * SkyColor;
@@ -123,15 +117,15 @@ void main(){
         return;
     }
     // Get the normal
-    vec3 Normal = normalize(texture2D(colortex1, TexCoords).rgb * 2.0f - 1.0f);
+    vec3 Normal = normalize(texture2D(colortex1, TexCoords).rgb);
     // Get the lightmap
     vec2 Lightmap = texture2D(colortex2, TexCoords).rg;
     vec3 LightmapColor = GetLightmapColor(Lightmap);
     // Compute cos theta between the normal and sun directions
-    float NdotL = max(dot(Normal, normalize(sunPosition)), 1.5f); // Lightmap?
+    float NdotL = max(dot(Normal, normalize(sunPosition)), 0.0f); // Lightmap?
     // Do the lighting calculations
     vec3 Diffuse = Albedo * (LightmapColor + NdotL * GetShadow(Depth) + 0.1f);
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
-    gl_FragData[0] = vec4(Diffuse, 1.0f);
+    gl_FragData[0] = vec4(Diffuse, lmcoord.y);
 }
