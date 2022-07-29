@@ -15,4 +15,4 @@ Planned functionality includes:
 
 # Lighting showcase
 
-![screenshot](https://i.imgur.com/VQ0wlkN.mp4)
+![screenshot](./main.gif)
