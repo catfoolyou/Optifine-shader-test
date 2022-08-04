@@ -27,6 +27,7 @@ uniform mat4 shadowModelView;
 uniform mat4 shadowProjection;
 
 uniform int worldTime;
+uniform float rainStrength; 
 
 /*
 const int colortex0Format = RGBA16F;
@@ -34,11 +35,11 @@ const int colortex1Format = RGB16;
 const int colortex2Format = RGB16;
 */
 
-const int shadowMapResolution = 1024; // Shadowmap quality
+const float sunPathRotation = -20.0f;
+const int shadowMapResolution = 600; // Shadowmap quality
 const float shadowDistance = 45;
 const int noiseTextureResolution = 32;
 
-const float Ambient = 0.0f; // Ambient light that comes from the sun
 
 float AdjustLightmapTorch(in float torch) {
     return 2.0 * pow(torch, 5.06);
@@ -106,22 +107,23 @@ vec3 GetShadow(float depth) {
 }
 
 void main(){
-    // Account for gamma correction
     vec3 Albedo = pow(texture2D(colortex0, TexCoords).rgb, vec3(2.2f)); // Making the vec3 less make it desaturated like BSL
     float Depth = texture2D(depthtex0, TexCoords).r;
     if(Depth == 1.0f){
         gl_FragData[0] = vec4(Albedo, 1.0f);
         return;
     }
-    // Get the normal
     vec3 Normal = normalize(texture2D(colortex1, TexCoords).rgb);
-    // Get the lightmap
     vec2 Lightmap = texture2D(colortex2, TexCoords).rg;
     vec3 LightmapColor = GetLightmapColor(Lightmap);
-    // Compute cos theta between the normal and sun directions
-    float NdotL = max(dot(Normal, normalize(sunPosition)), Ambient); // Lightmap stuff, Ambient has to be 0.0f
-    // Do the lighting calculations
-    vec3 Diffuse = Albedo * (LightmapColor + NdotL * GetShadow(Depth) + 0.1f); // Final shadow rendering
+    float NdotL = 0.85f;
+    if(worldTime > 12542 && worldTime < 23460){
+        NdotL = 0.0f;
+    }
+    if(rainStrength > 0.1){
+        NdotL = mix(1, 0, rainStrength);
+    }
+    vec3 Diffuse = Albedo * (LightmapColor + NdotL * GetShadow(Depth) + 0.1f);
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
     gl_FragData[0] = vec4(Diffuse, lmcoord.y);
