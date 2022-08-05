@@ -28,6 +28,8 @@ uniform mat4 shadowProjection;
 
 uniform int worldTime;
 uniform float rainStrength; 
+uniform ivec2 eyeBrightness;
+uniform vec3 skyColor;
 
 /*
 const int colortex0Format = RGBA16F;
@@ -38,7 +40,7 @@ const int colortex2Format = RGB16;
 const float sunPathRotation = -20.0f;
 const int shadowMapResolution = 600; // Shadowmap quality
 const float shadowDistance = 45;
-const int noiseTextureResolution = 32;
+const int noiseTextureResolution = 32; 
 
 
 float AdjustLightmapTorch(in float torch) {
@@ -57,11 +59,11 @@ vec3 GetLightmapColor(in vec2 Lightmap){
     // First adjust the lightmap
     Lightmap = AdjustLightmap(Lightmap);
     // Color of the torch and sky. The sky color changes depending on time of day but I will ignore that for simplicity
-    const vec3 TorchColor = vec3(2.0f, 1.25f, 1.08f);
+    const vec3 TorchColor = vec3(1.3f, 0.75f, 0.25f);
     const vec3 SkyColor = vec3(0.1f, 0.1f, 0.25f);
     // Multiply each part of the light map with it's color
     vec3 TorchLighting = Lightmap.x * TorchColor;
-    vec3 SkyLighting = Lightmap.y * SkyColor;
+    vec3 SkyLighting = Lightmap.y * SkyColor * (skyColor / 3);
     // Add the lighting togther to get the total contribution of the lightmap the final color.
     vec3 LightmapLighting = TorchLighting + SkyLighting;
     // Return the value
@@ -107,7 +109,7 @@ vec3 GetShadow(float depth) {
 }
 
 void main(){
-    vec3 Albedo = pow(texture2D(colortex0, TexCoords).rgb, vec3(2.2f)); // Making the vec3 less make it desaturated like BSL
+    vec3 Albedo = pow(texture2D(colortex0, TexCoords).rgb, vec3(2.0f));
     float Depth = texture2D(depthtex0, TexCoords).r;
     if(Depth == 1.0f){
         gl_FragData[0] = vec4(Albedo, 1.0f);
@@ -116,14 +118,34 @@ void main(){
     vec3 Normal = normalize(texture2D(colortex1, TexCoords).rgb);
     vec2 Lightmap = texture2D(colortex2, TexCoords).rg;
     vec3 LightmapColor = GetLightmapColor(Lightmap);
-    float NdotL = 0.85f;
-    if(worldTime > 12542 && worldTime < 23460){
-        NdotL = 0.0f;
+    float NdotL = 1.0f;
+    float Ambient = 0.1f;
+    if(worldTime >= 12786 && worldTime < 23961){
+        NdotL = 0.0f; // Night
+        Ambient = 0.0f;
     }
-    if(rainStrength > 0.1){
-        NdotL = mix(1, 0, rainStrength);
+    if(worldTime >= 2000 && worldTime < 12000){
+        NdotL = 1.0f; // Day
     }
-    vec3 Diffuse = Albedo * (LightmapColor + NdotL * GetShadow(Depth) + 0.1f);
+    if(worldTime >= 12000 && worldTime < 12542){
+        NdotL = (((12000 - worldTime) * 0.65f) / 542) + 1.0f; // Early evening
+    }
+    if(worldTime >= 12542 && worldTime < 12786){
+        NdotL = (((12542 - worldTime) * 0.35f) / 244) + 0.35f; // Late evening
+    }
+    if(worldTime >= 167 && worldTime < 2000){
+        NdotL = (((worldTime - 167) * 0.65f) / 1833) + 0.35f; // Late morning
+    }
+    if(worldTime >= 23961 && worldTime < 24000){
+        NdotL = ((worldTime - 23961) * 0.066f) / 39; // Early morning 1
+    }
+    if(worldTime >= 0 && worldTime < 167){
+        NdotL = ((worldTime * 0.284f) / 167) + 0.066f; // Early morning 2
+    }
+    if(rainStrength > 0){
+        NdotL = mix(1, 0, rainStrength); // Rain
+    }
+    vec3 Diffuse = Albedo * (LightmapColor + (NdotL * 1.2) * GetShadow(Depth) + Ambient);
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
     gl_FragData[0] = vec4(Diffuse, lmcoord.y);
