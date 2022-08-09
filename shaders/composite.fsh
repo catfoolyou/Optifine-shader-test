@@ -39,17 +39,13 @@ const int colortex2Format = RGB16;
 
 const float sunPathRotation = -20.0f;
 const int shadowMapResolution = 600; // Shadowmap quality
-const float shadowDistance = 45;
+const float shadowDistance = 75;
 const int noiseTextureResolution = 32; 
-
-
-float AdjustLightmapTorch(in float torch) {
-    return 2.0 * pow(torch, 5.06);
-}
+const float shadowDistanceRenderMul = 1.0f;
 
 vec2 AdjustLightmap(in vec2 Lightmap){
     vec2 NewLightMap;
-    NewLightMap.x = AdjustLightmapTorch(Lightmap.x);
+    NewLightMap.x = 2.0 * pow(Lightmap.x, 5.06);
     NewLightMap.y = Lightmap.y;
     return NewLightMap;
 }
@@ -61,11 +57,8 @@ vec3 GetLightmapColor(in vec2 Lightmap){
     // Color of the torch and sky. The sky color changes depending on time of day but I will ignore that for simplicity
     const vec3 TorchColor = vec3(1.3f, 0.75f, 0.25f);
     const vec3 SkyColor = vec3(0.1f, 0.1f, 0.25f);
-    // Multiply each part of the light map with it's color
-    vec3 TorchLighting = Lightmap.x * TorchColor;
-    vec3 SkyLighting = Lightmap.y * SkyColor * (skyColor / 3);
     // Add the lighting togther to get the total contribution of the lightmap the final color.
-    vec3 LightmapLighting = TorchLighting + SkyLighting;
+    vec3 LightmapLighting = (Lightmap.x * TorchColor) + (Lightmap.y * SkyColor * skyColor / 3);
     // Return the value
     return LightmapLighting;
 }
@@ -77,8 +70,7 @@ float Visibility(in sampler2D ShadowMap, in vec3 SampleCoords) {
 vec3 TransparentShadow(in vec3 SampleCoords){
     float ShadowVisibility0 = Visibility(shadowtex0, SampleCoords);
     float ShadowVisibility1 = Visibility(shadowtex1, SampleCoords);
-    vec4 ShadowColor0 = texture2D(shadowcolor0, SampleCoords.xy);
-    vec3 TransmittedColor = ShadowColor0.rgb * (1.0f - ShadowColor0.a); // Perform a blend operation with the sun color
+    vec3 TransmittedColor = (texture2D(shadowcolor0, SampleCoords.xy)).rgb * (1.0f - (texture2D(shadowcolor0, SampleCoords.xy)).a); // Perform a blend operation with the sun color
     return mix(TransmittedColor * ShadowVisibility1, vec3(1.0f), ShadowVisibility0);
 }
 
@@ -109,7 +101,8 @@ vec3 GetShadow(float depth) {
 }
 
 void main(){
-    vec3 Albedo = pow(texture2D(colortex0, TexCoords).rgb, vec3(2.0f));
+    float Vibrance = 1.9f;
+    vec3 Albedo = pow(texture2D(colortex0, TexCoords).rgb, vec3(Vibrance));
     float Depth = texture2D(depthtex0, TexCoords).r;
     if(Depth == 1.0f){
         gl_FragData[0] = vec4(Albedo, 1.0f);
@@ -119,10 +112,8 @@ void main(){
     vec2 Lightmap = texture2D(colortex2, TexCoords).rg;
     vec3 LightmapColor = GetLightmapColor(Lightmap);
     float NdotL = 1.0f;
-    float Ambient = 0.1f;
     if(worldTime >= 12786 && worldTime < 23961){
-        NdotL = 0.0f; // Night
-        Ambient = 0.0f;
+        NdotL = 0.0f; //
     }
     if(worldTime >= 2000 && worldTime < 12000){
         NdotL = 1.0f; // Day
@@ -145,7 +136,7 @@ void main(){
     if(rainStrength > 0){
         NdotL = mix(1, 0, rainStrength); // Rain
     }
-    vec3 Diffuse = Albedo * (LightmapColor + (NdotL * 1.2) * GetShadow(Depth) + Ambient);
+    vec3 Diffuse = Albedo * (LightmapColor + NdotL * GetShadow(Depth) + (NdotL / 5));
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
     gl_FragData[0] = vec4(Diffuse, lmcoord.y);
