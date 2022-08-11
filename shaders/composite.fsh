@@ -1,7 +1,5 @@
 #version 120
 
-#include "distort.glsl"
-
 varying vec2 TexCoords;
 varying vec2 lmcoord;
 varying vec4 texcoord;
@@ -39,9 +37,10 @@ const int colortex2Format = RGB16;
 
 const float sunPathRotation = -20.0f;
 const int shadowMapResolution = 600; // Shadowmap quality
-const float shadowDistance = 75;
+const float shadowDistance = 100;
 const int noiseTextureResolution = 32; 
 const float shadowDistanceRenderMul = 1.0f;
+const float ambientOcclusionLevel = 1.0f;
 
 vec2 AdjustLightmap(in vec2 Lightmap){
     vec2 NewLightMap;
@@ -50,16 +49,13 @@ vec2 AdjustLightmap(in vec2 Lightmap){
     return NewLightMap;
 }
 
-// Input is not adjusted lightmap coordinates
 vec3 GetLightmapColor(in vec2 Lightmap){
-    // First adjust the lightmap
     Lightmap = AdjustLightmap(Lightmap);
     // Color of the torch and sky. The sky color changes depending on time of day but I will ignore that for simplicity
-    const vec3 TorchColor = vec3(1.3f, 0.75f, 0.25f);
+    const vec3 TorchColor = vec3(1.0f, 0.55f, 0.25f);
     const vec3 SkyColor = vec3(0.1f, 0.1f, 0.25f);
     // Add the lighting togther to get the total contribution of the lightmap the final color.
-    vec3 LightmapLighting = (Lightmap.x * TorchColor) + (Lightmap.y * SkyColor * skyColor / 3);
-    // Return the value
+    vec3 LightmapLighting = (Lightmap.x * TorchColor) + (Lightmap.y * SkyColor);
     return LightmapLighting;
 }
 
@@ -68,32 +64,27 @@ float Visibility(in sampler2D ShadowMap, in vec3 SampleCoords) {
 }
 
 vec3 TransparentShadow(in vec3 SampleCoords){
-    float ShadowVisibility0 = Visibility(shadowtex0, SampleCoords);
-    float ShadowVisibility1 = Visibility(shadowtex1, SampleCoords);
     vec3 TransmittedColor = (texture2D(shadowcolor0, SampleCoords.xy)).rgb * (1.0f - (texture2D(shadowcolor0, SampleCoords.xy)).a); // Perform a blend operation with the sun color
-    return mix(TransmittedColor * ShadowVisibility1, vec3(1.0f), ShadowVisibility0);
+    return mix(TransmittedColor * Visibility(shadowtex1, SampleCoords), vec3(1.0f), Visibility(shadowtex0, SampleCoords));
+}
+
+vec2 DistortPosition(in vec2 position){
+    return position / mix(1.0f, length(position), 0.9f);
 }
 
 #define SHADOW_SAMPLES 2 // Higher gives better quality, lower gives better performance
 
 vec3 GetShadow(float depth) {
-    vec3 ClipSpace = vec3(TexCoords, depth) * 2.0f - 1.0f;
-    vec4 ViewW = gbufferProjectionInverse * vec4(ClipSpace, 1.0f);
-    vec3 View = ViewW.xyz / ViewW.w;
-    vec4 World = gbufferModelViewInverse * vec4(View, 1.0f);
-    vec4 ShadowSpace = shadowProjection * shadowModelView * World;
+    vec4 ViewW = gbufferProjectionInverse * vec4(vec3(TexCoords, depth) * 2.0f - 1.0f, 1.0f);
+    vec4 ShadowSpace = shadowProjection * shadowModelView * (gbufferModelViewInverse * vec4((ViewW.xyz / ViewW.w), 1.0f));
     ShadowSpace.xy = DistortPosition(ShadowSpace.xy);
     vec3 SampleCoords = ShadowSpace.xyz * 0.5f + 0.5f;
     float RandomAngle = texture2D(noisetex, TexCoords * 20.0f).r * 100.0f;
-    float cosTheta = cos(RandomAngle);
-	float sinTheta = sin(RandomAngle);
-    mat2 Rotation =  mat2(cosTheta, -sinTheta, sinTheta, cosTheta) / shadowMapResolution; // We can move our division by the shadow map resolution here for a small speedup
+    mat2 Rotation =  mat2(cos(RandomAngle), -(sin(RandomAngle)), sin(RandomAngle), cos(RandomAngle)) / shadowMapResolution; // We can move our division by the shadow map resolution here for a small speedup
     vec3 ShadowAccum = vec3(0.0f);
     for(int x = -SHADOW_SAMPLES; x <= SHADOW_SAMPLES; x++){
         for(int y = -SHADOW_SAMPLES; y <= SHADOW_SAMPLES; y++){
-            vec2 Offset = Rotation * vec2(x, y);
-            vec3 CurrentSampleCoordinate = vec3(SampleCoords.xy + Offset, SampleCoords.z);
-            ShadowAccum += TransparentShadow(CurrentSampleCoordinate);
+            ShadowAccum += TransparentShadow(vec3(SampleCoords.xy + (Rotation * vec2(x, y)), SampleCoords.z));
         }
     }
     ShadowAccum /= 25;
@@ -136,7 +127,7 @@ void main(){
     if(rainStrength > 0){
         NdotL = mix(1, 0, rainStrength); // Rain
     }
-    vec3 Diffuse = Albedo * (LightmapColor + NdotL * GetShadow(Depth) + (NdotL / 5));
+    vec3 Diffuse = Albedo * (LightmapColor + NdotL * GetShadow(Depth) + 0.1f);
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
     gl_FragData[0] = vec4(Diffuse, lmcoord.y);
