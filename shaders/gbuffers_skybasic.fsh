@@ -1,34 +1,17 @@
 #version 120
+/* DRAWBUFFERS:02 */ //0=gcolor, 2=gnormal for normals
 
-uniform float viewHeight;
-uniform float viewWidth;
-uniform mat4 gbufferModelView;
-uniform mat4 gbufferProjectionInverse;
-uniform vec3 fogColor;
-uniform vec3 skyColor;
+varying vec4 color;
 
-varying vec4 starData; //rgb = star color, a = flag for weather or not this pixel is a star.
-
-float fogify(float x, float w) {
-	return w / (x * x + w);
-}
-
-vec3 calcSkyColor(vec3 pos) {
-	float upDot = dot(pos, gbufferModelView[1].xyz);
-	return mix(skyColor, fogColor, fogify(max(upDot, 0.0), 0.25));
-}
+uniform int isEyeInWater;
 
 void main() {
-	vec3 color;
-	if (starData.a > 0.5) {
-		color = starData.rgb;
-	}
-	else {
-		vec4 pos = vec4(gl_FragCoord.xy / vec2(viewWidth, viewHeight) * 1.0, 1.0, 1.0);
-		pos = gbufferProjectionInverse * pos;
-		color = calcSkyColor(normalize(pos.xyz));
-	}
 
-/* DRAWBUFFERS:0 */
-	gl_FragData[0] = vec4(color, 1.0); //gcolor
+	gl_FragData[0] = color;
+		gl_FragData[0].rgb = mix(gl_FragData[0].rgb, gl_Fog.color.rgb, 1.0 - clamp(exp(-gl_Fog.density * gl_FogFragCoord), 0.0, 1.0));
+		gl_FragData[0].rgb = mix(gl_FragData[0].rgb, gl_Fog.color.rgb, clamp((gl_FogFragCoord - gl_Fog.start) * gl_Fog.scale, 0.0, 1.0));
+	if (isEyeInWater == 1.0 || isEyeInWater == 2.0){
+		gl_FragData[0].rgb = mix(gl_FragData[0].rgb, gl_Fog.color.rgb, 1.0 - clamp(exp(-gl_Fog.density * gl_FogFragCoord), 0.0, 1.0));
+	}
+    gl_FragData[1] = vec4(0.0); //fills normal buffer with 0.0, improves overall performance
 }
