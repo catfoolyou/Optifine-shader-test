@@ -36,10 +36,10 @@ const int colortex2Format = RGB16;
 */
 
 const float sunPathRotation = -20.0f;
-const int shadowMapResolution = 600; // Shadowmap quality
+const int shadowMapResolution = 600;
 const float shadowDistance = 80;
 const int noiseTextureResolution = 32; 
-const float shadowDistanceRenderMul = 1.0f;
+//const float shadowDistanceRenderMul = 1.0f;
 const float ambientOcclusionLevel = 1.0f;
 
 vec2 AdjustLightmap(in vec2 Lightmap){
@@ -55,7 +55,7 @@ vec3 GetLightmapColor(in vec2 Lightmap){
     const vec3 TorchColor = vec3(1.0f, 0.55f, 0.25f);
     const vec3 SkyColor = vec3(0.1f, 0.1f, 0.25f);
     // Add the lighting togther to get the total contribution of the lightmap the final color.
-    return (Lightmap.x * TorchColor) + (Lightmap.y * SkyColor * skyColor);
+    return (Lightmap.x * TorchColor) + (Lightmap.y * (SkyColor / 10) * skyColor);
 }
 
 float Visibility(in sampler2D ShadowMap, in vec3 SampleCoords) {
@@ -126,8 +126,15 @@ void main(){
         shadowStrength = mix(1, 0, rainStrength); // Rain
     }
     #define Normal normalize(texture2D(colortex1, TexCoords).rgb * 2.0f - 1.0f)
-    #define NdotL max(dot(Normal * shadowStrength, normalize(sunPosition)), 0.0f)
-    #define Diffuse Albedo * (LightmapColor + NdotL * GetShadow(Depth) + 0.1f)
+    float NdotL = max(dot(Normal * (shadowStrength - 0.2f), normalize(sunPosition)), 0.0f);
+    if(worldTime >= 12786 && worldTime < 23961){
+        NdotL = shadowStrength;
+    }
+    float Ambient = 0.1f;
+    if(shadowStrength < Ambient){
+        Ambient = shadowStrength + 0.01f;
+    }
+    #define Diffuse Albedo * (LightmapColor + NdotL * GetShadow(Depth) + Ambient)
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
     gl_FragData[0] = vec4(Diffuse, lmcoord.y);
