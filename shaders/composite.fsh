@@ -26,7 +26,7 @@ uniform mat4 shadowProjection;
 
 uniform int worldTime;
 uniform float rainStrength; 
-uniform ivec2 eyeBrightness;
+uniform ivec2 eyeBrightnessSmooth;
 uniform vec3 skyColor;
 
 /*
@@ -39,7 +39,8 @@ const float sunPathRotation = -20.0f;
 const int shadowMapResolution = 600;
 const float shadowDistance = 80;
 const int noiseTextureResolution = 32; 
-//const float shadowDistanceRenderMul = 1.0f;
+const float eyeBrightnessHalflife = 0.1f;
+const float shadowDistanceRenderMul = 1.0f;
 const float ambientOcclusionLevel = 1.0f;
 
 vec2 AdjustLightmap(in vec2 Lightmap){
@@ -55,7 +56,7 @@ vec3 GetLightmapColor(in vec2 Lightmap){
     const vec3 TorchColor = vec3(1.0f, 0.55f, 0.25f);
     const vec3 SkyColor = vec3(0.1f, 0.1f, 0.25f);
     // Add the lighting togther to get the total contribution of the lightmap the final color.
-    return (Lightmap.x * TorchColor) + (Lightmap.y * (SkyColor / 10) * skyColor);
+    return (Lightmap.x * TorchColor * max((eyeBrightnessSmooth.x / 15), 5)) + (Lightmap.y * SkyColor * skyColor);
 }
 
 float Visibility(in sampler2D ShadowMap, in vec3 SampleCoords) {
@@ -130,11 +131,8 @@ void main(){
     if(worldTime >= 12786 && worldTime < 23961){
         NdotL = shadowStrength;
     }
-    float Ambient = 0.1f;
-    if(shadowStrength < Ambient){
-        Ambient = shadowStrength + 0.01f;
-    }
-    #define Diffuse Albedo * (LightmapColor + NdotL * GetShadow(Depth) + Ambient)
+    #define Ambient max(shadowStrength - 0.75f, 0.03f)
+    #define Diffuse Albedo * (LightmapColor + NdotL * GetShadow(Depth) + Ambient) // lmcoord.y
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
     gl_FragData[0] = vec4(Diffuse, lmcoord.y);
