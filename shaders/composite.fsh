@@ -131,7 +131,7 @@ void main(){
     if(worldTime >= 12786 && worldTime < 23961){
         NdotL = shadowStrength;
     }
-    #define Ambient max(shadowStrength - 0.75f, 0.03f)
+    #define Ambient max(shadowStrength - 0.8f, 0.03f)
     #define Diffuse Albedo * (LightmapColor + NdotL * GetShadow(Depth) + Ambient) // lmcoord.y
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
