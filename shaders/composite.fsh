@@ -127,12 +127,12 @@ void main(){
         shadowStrength = mix(1, 0, rainStrength); // Rain
     }
     #define Normal normalize(texture2D(colortex1, TexCoords).rgb * 2.0f - 1.0f)
-    float NdotL = max(dot(Normal * (shadowStrength - 0.2f), normalize(sunPosition)), 0.0f);
+    float NdotL = max(dot(Normal * (shadowStrength), normalize(sunPosition)), 0.0f);
     if(worldTime >= 12786 && worldTime < 23961){
         NdotL = shadowStrength;
     }
-    #define Ambient max(shadowStrength - 0.8f, 0.03f)
-    #define Diffuse Albedo * (LightmapColor + NdotL * GetShadow(Depth) + Ambient) // lmcoord.y
+    #define Ambient max(shadowStrength * 0.15f, 0.02f)
+    #define Diffuse Albedo * (LightmapColor + NdotL * GetShadow(Depth) + Ambient * 1.5) // lmcoord.y
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
     gl_FragData[0] = vec4(Diffuse, lmcoord.y);
