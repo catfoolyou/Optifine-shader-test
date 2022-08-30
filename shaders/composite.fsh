@@ -3,6 +3,7 @@
 varying vec2 TexCoords;
 varying vec2 lmcoord;
 varying vec4 texcoord;
+varying vec4 Color;
 
 // Direction of the sun (not normalized!)
 uniform vec3 sunPosition;
@@ -18,6 +19,7 @@ uniform sampler2D shadowtex1;
 uniform sampler2D shadowcolor0;
 uniform sampler2D noisetex;
 uniform sampler2D lightmap;
+uniform sampler2D texture;
 
 uniform mat4 gbufferProjectionInverse;
 uniform mat4 gbufferModelViewInverse;
@@ -54,9 +56,9 @@ vec3 GetLightmapColor(in vec2 Lightmap){
     Lightmap = AdjustLightmap(Lightmap);
     // Color of the torch and sky.
     const vec3 TorchColor = vec3(1.0f, 0.55f, 0.25f);
-    const vec3 SkyColor = vec3(0.1f, 0.1f, 0.25f);
+    const vec3 SkyColor = vec3(0.21f, 0.15f, 0.1f);
     // Add the lighting togther to get the total contribution of the lightmap the final color.
-    return (Lightmap.x * TorchColor * max((eyeBrightnessSmooth.x / 15), 5)) + (Lightmap.y * SkyColor * skyColor);
+    return (Lightmap.x * TorchColor * 2) + (Lightmap.y * SkyColor);
 }
 
 float Visibility(in sampler2D ShadowMap, in vec3 SampleCoords) {
@@ -92,7 +94,8 @@ vec3 GetShadow(float depth) {
 }
 
 void main(){
-    #define Vibrance 1.9
+    //#define Vibrance 1.6 * length(1.6)
+    #define Vibrance 1.9f
     #define Albedo pow(texture2D(colortex0, TexCoords).rgb, vec3(Vibrance))
     #define Depth texture2D(depthtex0, TexCoords).r
     if(Depth == 1.0f){
@@ -131,8 +134,8 @@ void main(){
     if(worldTime >= 12786 && worldTime < 23961){
         NdotL = shadowStrength;
     }
-    #define Ambient max(shadowStrength * 0.15f, 0.02f)
-    #define Diffuse Albedo * (LightmapColor + NdotL * GetShadow(Depth) + Ambient * 1.5) // lmcoord.y
+    #define Ambient max(shadowStrength * 0.15f, 0.02f) * vec3(1.0f, 0.55f, 0.25f) * GetShadow(Depth)
+    #define Diffuse Albedo * (LightmapColor + NdotL * GetShadow(Depth) + Ambient) // lmcoord.y
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
     gl_FragData[0] = vec4(Diffuse, lmcoord.y);

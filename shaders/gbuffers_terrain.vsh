@@ -17,8 +17,8 @@ void main() {
     TexCoords = gl_MultiTexCoord0.st;
     // Grass
     if (mc_Entity.x == 10031 || mc_Entity.x == 10059 || mc_Entity.x == 10175 || mc_Entity.x == 10176 || mc_Entity.x == 10177){
-        position.x += cos(position.z + (frameTimeCounter * 2)) / 17;
-        position.z += cos(position.x + (frameTimeCounter * 2)) / 17;
+        position.xz += cos(position.xz + (frameTimeCounter * 2)) / 17;
+        position.xz -= sin(position.xz + (frameTimeCounter * 2)) / 17;
         gl_Position = gl_ProjectionMatrix * gbufferModelView * position;
     }
     // Leaves
