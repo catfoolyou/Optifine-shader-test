@@ -28,6 +28,7 @@ uniform mat4 shadowProjection;
 
 uniform int worldTime;
 uniform float rainStrength; 
+uniform float playerMood;
 uniform ivec2 eyeBrightnessSmooth;
 uniform vec3 skyColor;
 
@@ -38,7 +39,7 @@ const int colortex2Format = RGB16;
 */
 
 const float sunPathRotation = -20.0f;
-const int shadowMapResolution = 600;
+const int shadowMapResolution = 512;
 const float shadowDistance = 80;
 const int noiseTextureResolution = 32; 
 const float eyeBrightnessHalflife = 0.1f;
@@ -48,14 +49,14 @@ const float ambientOcclusionLevel = 1.0f;
 vec2 AdjustLightmap(in vec2 Lightmap){
     vec2 NewLightMap;
     NewLightMap.x = 2.0 * pow(Lightmap.x, 5.06);
-    NewLightMap.y = Lightmap.y;
+    NewLightMap.y = pow(Lightmap.y, 4);
     return NewLightMap;
 }
 
 vec3 GetLightmapColor(in vec2 Lightmap){
     Lightmap = AdjustLightmap(Lightmap);
     // Color of the torch and sky.
-    const vec3 TorchColor = vec3(1.0f, 0.55f, 0.25f);
+    const vec3 TorchColor = vec3(0.8f, 0.55f, 0.25f);
     const vec3 SkyColor = vec3(0.21f, 0.15f, 0.1f);
     // Add the lighting togther to get the total contribution of the lightmap the final color.
     return (Lightmap.x * TorchColor * 2) + (Lightmap.y * SkyColor);
@@ -94,8 +95,7 @@ vec3 GetShadow(float depth) {
 }
 
 void main(){
-    //#define Vibrance 1.6 * length(1.6)
-    #define Vibrance 1.9f
+    #define Vibrance 1.4 * length(1.4)
     #define Albedo pow(texture2D(colortex0, TexCoords).rgb, vec3(Vibrance))
     #define Depth texture2D(depthtex0, TexCoords).r
     if(Depth == 1.0f){
@@ -134,7 +134,7 @@ void main(){
     if(worldTime >= 12786 && worldTime < 23961){
         NdotL = shadowStrength;
     }
-    #define Ambient max(shadowStrength * 0.15f, 0.02f) * vec3(1.0f, 0.55f, 0.25f) * GetShadow(Depth)
+    #define Ambient max(shadowStrength * 0.15f, 0) - playerMood
     #define Diffuse Albedo * (LightmapColor + NdotL * GetShadow(Depth) + Ambient) // lmcoord.y
     /* DRAWBUFFERS:0 */
     // Finally write the diffuse color
