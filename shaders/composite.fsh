@@ -3,7 +3,6 @@
 varying vec2 TexCoords;
 varying vec2 lmcoord;
 varying vec4 texcoord;
-varying vec4 Color;
 
 // Direction of the sun (not normalized!)
 uniform vec3 sunPosition;
@@ -57,9 +56,10 @@ vec3 GetLightmapColor(in vec2 Lightmap){
     Lightmap = AdjustLightmap(Lightmap);
     // Color of the torch and sky.
     const vec3 TorchColor = vec3(0.8f, 0.55f, 0.25f);
-    const vec3 SkyColor = vec3(0.21f, 0.15f, 0.1f);
+    vec4 Albedo = texture2D(texture, TexCoords);
+    const vec3 SkyColor = vec3(0.2f, 0.17f, 0.1f);
     // Add the lighting togther to get the total contribution of the lightmap the final color.
-    return (Lightmap.x * TorchColor * 2) + (Lightmap.y * SkyColor);
+    return (Lightmap.x * TorchColor) + (Lightmap.y * SkyColor / 1.7f);
 }
 
 float Visibility(in sampler2D ShadowMap, in vec3 SampleCoords) {
@@ -127,7 +127,7 @@ void main(){
         shadowStrength = ((worldTime * 0.284f) / 167) + 0.066f; // Early morning 2
     }
     if(rainStrength > 0){
-        shadowStrength = mix(1, 0, rainStrength); // Rain
+        shadowStrength = min(mix(1, 0, rainStrength), shadowStrength); // Rain
     }
     #define Normal normalize(texture2D(colortex1, TexCoords).rgb * 2.0f - 1.0f)
     float NdotL = max(dot(Normal * (shadowStrength), normalize(sunPosition)), 0.0f);

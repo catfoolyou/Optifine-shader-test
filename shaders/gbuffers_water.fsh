@@ -2,6 +2,7 @@
 
 varying vec2 TexCoords;
 varying vec2 LightmapCoords;
+uniform float frameTimeCounter;
 varying vec3 Normal;
 varying vec4 Color;
 
@@ -10,7 +11,8 @@ uniform sampler2D texture;
 
 void main(){
     // Sample from texture atlas and account for biome color + ambien occlusion
-    vec4 Albedo = texture2D(texture, TexCoords) * Color;
+    vec4 color = vec4(0.0f, 0.2f, 0.4f, 0.9f);
+    vec4 Albedo = texture2D(texture, TexCoords) * color;
     /* DRAWBUFFERS:012 */
     // Write the values to the color textures
     gl_FragData[0] = Albedo;
