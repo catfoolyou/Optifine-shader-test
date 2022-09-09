@@ -7,10 +7,11 @@ varying vec4 Color;
 
 // The texture atlas
 uniform sampler2D texture;
+uniform vec4 entityColor;
 
 void main(){
     // Sample from texture atlas and account for biome color + ambien occlusion
-    vec4 Albedo = texture2D(texture, TexCoords) * Color;
+    vec4 Albedo = texture2D(texture, TexCoords) * Color + (entityColor / 2.5f);
     /* DRAWBUFFERS:012 */
     // Write the values to the color textures
     gl_FragData[0] = Albedo;

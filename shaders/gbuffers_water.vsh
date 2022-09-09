@@ -7,6 +7,8 @@ uniform mat4 gbufferModelView;
 uniform float frameTimeCounter;
 varying vec3 Normal;
 varying vec4 Color;
+attribute vec4 mc_Entity;
+varying float blockID;
 
 vec3 wave_move(vec3 pos) {
   float timer = (frameTimeCounter) * 3.141592;
@@ -26,8 +28,15 @@ void main() {
     // Assign values to varying variables
     vec4 position = gbufferModelViewInverse * gl_ModelViewMatrix * gl_Vertex;
     TexCoords = gl_MultiTexCoord0.st;
-    position.y += wave_move(position.xyz).z / 20;
-    gl_Position = gl_ProjectionMatrix * gbufferModelView * position;
+    blockID = mc_Entity.x;
+    if (mc_Entity.x == 10119){
+        position.y += wave_move(position.xyz).z / 20;
+        gl_Position = gl_ProjectionMatrix * gbufferModelView * position;
+    }
+    if (mc_Entity.x == 10020){
+        position.y += wave_move(position.xyz).z / 50;
+        gl_Position = gl_ProjectionMatrix * gbufferModelView * position;
+    }
     LightmapCoords = mat2(gl_TextureMatrix[1]) * gl_MultiTexCoord1.st;
     // Transform them into the [0, 1] range
     LightmapCoords = (LightmapCoords * 33.05f / 32.0f) - (1.05f / 32.0f);
