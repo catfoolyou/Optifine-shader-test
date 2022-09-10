@@ -12,7 +12,12 @@ varying float blockID;
 uniform sampler2D texture;
 
 void main(){
-    // Sample from texture atlas and account for biome color + ambien occlusion
+    /*vec3 playerPos = getPlayerPos(texcoord, depth);
+    vec3 viewDir = normalize(playerPos);
+    vec3 reflectionDirection = reflect(viewDir, normal);
+    vec3 screenSpaceReflectionPos = toScreenSpace(reflectionDirection);
+    vec3 reflectColor = texture(u_color, screenSpaceReflectionPos.xy).rgb;*/
+
     vec4 color = vec4(0.0f, 0.25f, 0.4f, 0.6f);
     vec4 Albedo = texture2D(texture, TexCoords) * Color;
     int id = int(floor(blockID + 0.5));

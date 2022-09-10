@@ -19,4 +19,3 @@ Planned functionality includes:
 # Current stage of the project
 
 ![screenshot](./main.png)
-![screenshot](./2.png)
