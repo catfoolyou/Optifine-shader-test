@@ -1,5 +1,5 @@
 # Overhaul Shader
-A realistic rendering shader that tries to implement as much as possible from high-end OptiFine shaders like SEUS and Continuum to the while still maintaining decent performace. Due to my limited knowledge, most advanced features are not yet implemented.
+A basic shader for Optifine. Lacks most decent features of the good shaders. Looks pretty bad and IS NO LONGER MAINTANED. Use with caution.
 
 Current functionality includes:
 - Optimized, high quality shadows
@@ -7,14 +7,6 @@ Current functionality includes:
 - Realistic blocklighting
 - Time based shadow sharpness
 - Basic ambient occlusion
-
-Planned functionality includes:
-- Screen space ambient occlusion
-- Realistic skies
-- Volumetric fog
-- Light shafts
-- Realistic water
-- Block refelctions
 
 # Current stage of the project
 
